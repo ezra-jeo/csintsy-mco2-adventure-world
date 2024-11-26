@@ -3,7 +3,7 @@
 :- dynamic pit/2.
 :- dynamic gold/2.
 :- dynamic unexplored_safe/2.
-:- dynamic explored_safe/2
+:- dynamic explored_safe/2,
 :- dynamic home/2.
 :- dynamic unknown/2.
 
@@ -42,7 +42,7 @@ get_unknown_adjacent(R,C,N) :-
         in_bounds(NR,NC,N),
         not(explored_safe(NR,NC)),
         not(unexplored_safe(NR,NC)),   
-        not(home(NR,NC))
+        not(home(NR,NC)),
     ),  assert_fact(unknown(NR,NC))).
 
 get_unknown_safe_adjacent(R,C,N) :-
@@ -54,8 +54,8 @@ get_unknown_safe_adjacent(R,C,N) :-
         NC is C + DC,
         in_bounds(NR,NC,N),
         not(home(NR,NC)),
-        not(unknown(NR,NC))
-        not(explored_safe(NR, NC))
+        not(unknown(NR,NC)),
+        not(explored_safe(NR, NC)),
     ),  assert_fact(unexplored_safe(NR,NC))).
 
 
