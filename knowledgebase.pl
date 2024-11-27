@@ -1,81 +1,128 @@
+% Implements a dynamic knowledge base.
 :- dynamic breeze/2.
-:- dynamic glitter/2.
+% :- dynamic glitter/2.
 :- dynamic pit/2.
 :- dynamic gold/2.
-:- dynamic safe/2.
+:- dynamic unexplored_safe/2.
+:- dynamic explored_safe/2.
 :- dynamic home/2.
 :- dynamic unknown/2.
+:- dynamic coins/1. 
 
-tae(maasim).
-
+% Adds non-existing fact to the knowledge base.
 assert_fact(N) :-
-    not(N), writeln(N),
+    not(N),
     assertz(N).
 
+% Validates if the given tile location is within the grid.
 in_bounds(R,C,N) :-
-    R >= 1, R =< N,
-    C >= 1, C =< N.
+    (R >= 1, R =< N),
+    (C >= 1, C =< N).
 
+% Validates if the given tile locations are neighboring or adjacent.
+neighbor(R,C,NR,NC,N) :-
+    ((NR is R + 1, NC is C);
+    (NR is R - 1, NC is C);
+    (NR is R, NC is C + 1);
+    (NR is R, NC is C - 1)),
+    in_bounds(NR,NC,N).
+
+% Initializes the starting tile of player and home and status of neighboring tiles.
 initialize_start(R,C,N) :-
     assert_fact(home(R,C)),
-    assert_fact(safe(R,C)),
-    forall(
-    (
-        member((DR, DC), [(-1, 0), (1, 0), (0, -1), (0, 1)]),  % Offsets for neighbors
-        NR is R + DR,
-        NC is C + DC,
-        in_bounds(NR,NC,N)
-    ),  assert_fact(safe(NR,NC))).
+    assert_fact(explored_safe(R,C)),
+    forall(neighbor(R,C,NR,NC,N), assert_fact(unexplored_safe(NR,NC))).
 
-assert_unknown_adjacent(R,C,N) :-
-    (breeze(R,C); glitter(R,C)), 
-    forall(
-    (
-        member((DR, DC), [(-1, 0), (1, 0), (0, -1), (0, 1)]),  % Offsets for neighbors
-        NR is R + DR,
-        NC is C + DC,
-        in_bounds(NR,NC,N),
-        not(safe(NR,NC))
-    ),  assert_fact(unknown(NR,NC))).
+% Infers the given tile is unexplored safe with the respect to the constraints.
+is_unexplored_safe(R,C) :-
+    (\+ breeze(R,C),
+    \+ pit(R,C),
+    \+ gold(R,C),
+    \+ explored_safe(R,C),
+    \+ home(R,C),
+    assert_fact(unexplored_safe(R,C)),
+    (unknown(R,C) -> retract(unknown(R,C)); true)); true.
 
-assert_safe_adjacent(R,C,N) :-
-    safe(R,C), not(breeze(R,C)), not(glitter(R,C)),
-    forall(
-    (
-        member((DR, DC), [(-1, 0), (1, 0), (0, -1), (0, 1)]),  % Offsets for neighbors
-        NR is R + DR,
-        NC is C + DC,
-        in_bounds(NR,NC,N),
-        not(home(NR,NC)),
-        not(unknown(NR,NC))
-    ),  assert_fact(safe(NR,NC))).
+% Infers the given tile is unknown with the respect to the constraints.
+is_unknown(R,C) :-
+    (\+ breeze(R,C),
+    \+ pit(R,C),
+    \+ gold(R,C),
+    \+ unexplored_safe(R,C),
+    \+ explored_safe(R,C),
+    \+ home(R,C),
+    \+ unknown(R,C),
+    assert_fact(unknown(R,C))); true.
 
+% Validates if the given tile can be inferred as a gold.
+% is_gold(R,C,N) :-
+%     (forall(
+%         neighbor(R,C,NR,NC,N),
+%         glitter(NR,NC)),
+%         assert_fact(gold(R,C)),
+%         retract(unknown(R,C));
+%     true).
+%            (
+%             glitter(NR,NC),
+%             forall(
+%                 neighbor(NR,NC,NNR,NNC,N),
+%                  (
+%                     explored_safe(NNR, NNC); 
+%                     unexplored_safe(NNR,NNC)
+%                 )
+%             )
+%         )
+%     ), 
+%     assert_fact(gold(R,C)), 
+%     retract(unknown(R,C)); 
+% true).
+    
+% Validates if the given tile can be inferred as a pit.
+is_pit(R,C,N) :-
+    (forall(
+        neighbor(R,C,NR,NC,N),
+        breeze(NR,NC)),
+        forall(
+            neighbor(NR,NC,NNR,NNC,N),
+            (
+                (NNR == R, NNC == C);
+                breeze(NNR,NNC);
+                gold(NNR,NNC);
+                explored_safe(NNR,NNC);
+                unexplored_safe(NNR,NNC)
+            )            
+        ),
+        assert_fact(pit(R,C)),
+        retract(unknown(R,C));
+    true).
 
-% get_pit(R,C,N) :- % Assuming the position entered is a breeze.
-
-replace_unknown(R,C) :-
-    unknown(R,C),
-    retract(unknown(R,C)),
-    assert_fact(safe(R,C)).
-
-% replace_unknown_safe
-
-end(R,C) :-
-    pit(R,C).
-
-grab(R,C) :-
-    gold(R,C).
-
-
-/* 
-Possible Revision:
-
-get_pit: given user explored all surrounding breeze cells, deduce pit
-unexplored_safe
-only one predicate for asserting a fact and assuming adjacents cells for breeze, safe, glitter.
-
-count gold bars to decide whether win or lose
-check if at home with enough goldbars
-
-
-*/
+% Updates knowledge base from the move of the player and tile status.
+move(R,C,S,N) :-
+    (member(safe,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
+                                                                assert_fact(explored_safe(R,C)), 
+                                                                forall(neighbor(R,C,NR,NC,N), 
+                                                                        is_unexplored_safe(NR,NC)); 
+                                                                true); 
+                    true),                   
+    (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> ((member(gold,S) -> true); (retract(unexplored_safe(R,C)); retract(unknown(R,C))), assert_fact(explored_safe(R,C))),
+                                                                   assert_fact(breeze(R,C)),
+                                                                   forall(neighbor(R,C,NR,NC,N), 
+                                                                          is_unknown(NR,NC)), forall(neighbor(R,C,NR,NC,N), is_pit(NR,NC,N));
+                                                                   true); 
+                         true),
+    (member(gold,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))), 
+                                                                assert_fact(gold(R,C)),
+                                                                assert_fact(explored_safe(R,C)),
+                                                                (member(breeze,S) -> true; forall(neighbor(R,C,NR,NC,N), 
+                                                                                                  is_unexplored_safe(NR,NC))),
+                                                                (coins(X) -> NX is X + 1, 
+                                                                             assert_fact(coins(NX)), 
+                                                                             retract(coins(X)); 
+                                                                             NX is 1, 
+                                                                             assert_fact(coins(NX))); 
+                                                true); 
+                        true), 
+    (member(pit,S) -> (unknown(R,C) -> retract(unknown(R,C)), 
+                                       assert_fact(pit(R,C)); 
+                                       true); 
+                       true).

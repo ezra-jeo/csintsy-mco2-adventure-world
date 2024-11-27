@@ -1,19 +1,64 @@
 import pygame
 from sprite import Sprite
 from input import is_key_pressed
+from physics import Body
+from entity import active_objects
 
-class Player(Sprite): # extends Sprite
-    def __init__(self, image, x, y):
-        super().__init__(image, x, y) # call super constructor instantiate
-        self.movement_speed = 2
-    
+GRID_SIZE = 64
+
+class Player(): # extends Sprite
+    def __init__(self):
+        active_objects.append(self)
+        self.moving = False
+
     def update(self):
+        previous_x = self.entity.x
+        previous_y = self.entity.y
+
+        sprite = self.entity.get(Sprite)
+        body = self.entity.get(Body)
+
+        if self.moving:
+            if not (is_key_pressed(pygame.K_w) or 
+                    is_key_pressed(pygame.K_a) or 
+                    is_key_pressed(pygame.K_s) or 
+                    is_key_pressed(pygame.K_d)):
+                self.moving = False
+            return None
+
+        # Process movement if not already moving
         if is_key_pressed(pygame.K_w):
-            self.y -= self.movement_speed
-        if is_key_pressed(pygame.K_a):
-            self.x -= self.movement_speed
-        if is_key_pressed(pygame.K_s):
-            self.y += self.movement_speed
-        if is_key_pressed(pygame.K_d):
-            self.x += self.movement_speed
+            self.entity.y -= GRID_SIZE
+            self.moving = True
+        elif is_key_pressed(pygame.K_a):
+            self.entity.x -= GRID_SIZE
+            self.moving = True
+        elif is_key_pressed(pygame.K_s):
+            self.entity.y += GRID_SIZE
+            self.moving = True
+        elif is_key_pressed(pygame.K_d):
+            self.entity.x += GRID_SIZE
+            self.moving = True
+
+        # Collision validation
+        if not body.is_position_valid():
+            self.entity.x = previous_x
+            self.entity.y = previous_y
+        else:
+            # Snap to the grid
+            self.entity.x = round(self.entity.x / GRID_SIZE) * GRID_SIZE
+            self.entity.y = round(self.entity.y / GRID_SIZE) * GRID_SIZE
+            tile_x, tile_y = self.get_tile_position()
+            #map.reveal_tile(tile_x, tile_y)
+
     
+    def get_tile_position(self):
+        tile_col= self.entity.x // GRID_SIZE
+        tile_row = self.entity.y // GRID_SIZE 
+        
+        return tile_row, tile_col
+
+
+
+
+
