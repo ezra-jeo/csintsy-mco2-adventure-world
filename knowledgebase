@@ -3,7 +3,7 @@
 :- dynamic pit/2.
 :- dynamic gold/2.
 :- dynamic unexplored_safe/2.
-:- dynamic explored_safe/2
+:- dynamic explored_safe/2.
 :- dynamic home/2.
 :- dynamic unknown/2.
 
@@ -28,8 +28,9 @@ initialize_start(R,C,N) :-
         in_bounds(NR,NC,N)
     ),  assert_fact(unexplored_safe(NR,NC))).
 
-get_explored_safe(R,C,N) :-
+get_explored_safe(R,C) :-
     (unexplored_safe(R, C)),
+    retract(unexplored_safe(R,C)),
     assert_fact(explored_safe(R,C)).
 
 get_unknown_adjacent(R,C,N) :-
@@ -54,7 +55,7 @@ get_unknown_safe_adjacent(R,C,N) :-
         NC is C + DC,
         in_bounds(NR,NC,N),
         not(home(NR,NC)),
-        not(unknown(NR,NC))
+        not(unknown(NR,NC)),
         not(explored_safe(NR, NC))
     ),  assert_fact(unexplored_safe(NR,NC))).
 
@@ -64,10 +65,22 @@ get_unknown_safe_adjacent(R,C,N) :-
 replace_unknown(R,C) :-
     unknown(R,C),
     retract(unknown(R,C)),
-    assert_fact(explored_safe_safe(R,C)).
+    assert_fact(explored_safe(R,C)).
 
 fall(R,C) :-
     pit(R,C).
 
 grab(R,C) :-
     gold(R,C).
+/* 
+Possible Revision:
+
+get_pit: given user explored all surrounding breeze cells, deduce pit
+unexplored_safe
+only one predicate for asserting a fact and assuming adjacents cells for breeze, safe, glitter.
+
+count gold bars to decide whether win or lose
+check if at home with enough goldbars
+
+
+*/

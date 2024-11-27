@@ -2,14 +2,14 @@
 :- dynamic glitter/2.
 :- dynamic pit/2.
 :- dynamic gold/2.
-:- dynamic unexplored_safe/2.
-:- dynamic explored_safe/2,
+:- dynamic safe/2.
 :- dynamic home/2.
 :- dynamic unknown/2.
 
 tae(maasim).
+
 assert_fact(N) :-
-    not(N), %writeln(N),
+    not(N), writeln(N),
     assertz(N).
 
 in_bounds(R,C,N) :-
@@ -18,21 +18,16 @@ in_bounds(R,C,N) :-
 
 initialize_start(R,C,N) :-
     assert_fact(home(R,C)),
-    assert_fact(explored_safe(R,C)),
-
+    assert_fact(safe(R,C)),
     forall(
     (
         member((DR, DC), [(-1, 0), (1, 0), (0, -1), (0, 1)]),  % Offsets for neighbors
         NR is R + DR,
         NC is C + DC,
         in_bounds(NR,NC,N)
-    ),  assert_fact(unexplored_safe(NR,NC))).
+    ),  assert_fact(safe(NR,NC))).
 
-get_explored_safe(R,C,N) :-
-    (unexplored_safe(R, C)),
-    assert_fact(explored_safe(R,C)).
-
-get_unknown_adjacent(R,C,N) :-
+assert_unknown_adjacent(R,C,N) :-
     (breeze(R,C); glitter(R,C)), 
     forall(
     (
@@ -40,13 +35,11 @@ get_unknown_adjacent(R,C,N) :-
         NR is R + DR,
         NC is C + DC,
         in_bounds(NR,NC,N),
-        not(explored_safe(NR,NC)),
-        not(unexplored_safe(NR,NC)),   
-        not(home(NR,NC)),
+        not(safe(NR,NC))
     ),  assert_fact(unknown(NR,NC))).
 
-get_unknown_safe_adjacent(R,C,N) :-
-    explored_safe(R,C), not(breeze(R,C)), not(glitter(R,C)),
+assert_safe_adjacent(R,C,N) :-
+    safe(R,C), not(breeze(R,C)), not(glitter(R,C)),
     forall(
     (
         member((DR, DC), [(-1, 0), (1, 0), (0, -1), (0, 1)]),  % Offsets for neighbors
@@ -54,20 +47,35 @@ get_unknown_safe_adjacent(R,C,N) :-
         NC is C + DC,
         in_bounds(NR,NC,N),
         not(home(NR,NC)),
-        not(unknown(NR,NC)),
-        not(explored_safe(NR, NC)),
-    ),  assert_fact(unexplored_safe(NR,NC))).
+        not(unknown(NR,NC))
+    ),  assert_fact(safe(NR,NC))).
 
 
-%get_pit(R,C,N) :- % Assuming the position entered is a breeze.
+% get_pit(R,C,N) :- % Assuming the position entered is a breeze.
 
 replace_unknown(R,C) :-
     unknown(R,C),
     retract(unknown(R,C)),
-    assert_fact(explored_safe_safe(R,C)).
+    assert_fact(safe(R,C)).
 
-fall(R,C) :-
+% replace_unknown_safe
+
+end(R,C) :-
     pit(R,C).
 
 grab(R,C) :-
     gold(R,C).
+
+
+/* 
+Possible Revision:
+
+get_pit: given user explored all surrounding breeze cells, deduce pit
+unexplored_safe
+only one predicate for asserting a fact and assuming adjacents cells for breeze, safe, glitter.
+
+count gold bars to decide whether win or lose
+check if at home with enough goldbars
+
+
+*/
