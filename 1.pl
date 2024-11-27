@@ -67,7 +67,7 @@ is_gold(R,C) :-
 
 % Updates knowledge base from the move of the player and tile status.
 move(R,C,S,N) :-
-    (member(safe,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unexplored_safe(R,C))),
+    (member(safe,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
                                                                 assert_fact(explored_safe(R,C)), 
                                                                 forall(neighbor(R,C,NR,NC,N), 
                                                                         is_unexplored_safe(NR,NC)); 
@@ -85,14 +85,14 @@ move(R,C,S,N) :-
                                                      assert_fact(coins(NX))); 
                                         true); 
                         true),
-    (member(breeze,S) -> (unexplored_safe(R,C) -> retract(unexplored_safe(R,C)), 
+    (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
                                              assert_fact(breeze(R,C)),
                                              assert_fact(explored_safe(R,C)), 
                                              forall(neighbor(R,C,NR,NC,N), 
                                                     is_unknown(NR,NC)); 
                                              true); 
                      true),
-    (member(glitter,S) -> (unexplored_safe(R,C) -> retract(unexplored_safe(R,C)),
+    (member(glitter,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
                                              assert_fact(glitter(R,C)), 
                                              assert_fact(explored_safe(R,C)),
                                              forall(neighbor(R,C,NR,NC,N), 
@@ -112,13 +112,3 @@ tile_status(R,C,S) :-
      unexplored_safe(R,C) -> S = unexploredsafe;
      explored_safe(R,C) -> S = exploresafe;
      S = unclassified).
-
-/* 
-Possible Revision:
-- get_pit: given user explored all surrounding breeze cells, deduce pit
-unexplored_safe
-- check if at home with enough goldbars
-
-%get_pit(R,C,N) :- % Assuming the position entered is a breeze.
-
-*/
