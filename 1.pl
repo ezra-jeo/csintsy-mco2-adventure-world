@@ -56,14 +56,27 @@ is_unknown(R,C) :-
     \+ unknown(R,C),
     assert_fact(unknown(R,C))); true.
 
-% is_gold
-is_gold(R,C) :-
-    forall(adjacent(neighbor(R,C,NR,NC,N),
-           glitter(NR,NC),
-           forall(neighbor(NR,NC,NNR,NNC,N),
-                  \+ unknown(NNR,NNC)))).
+% Validates if the given tile can be inferred as a gold.
+is_gold(R,C,N) :-
+    (forall(
+        neighbor(R,C,NR,NC,N),
+           (
+            glitter(NR,NC),
+            forall(
+                neighbor(NR,NC,NNR,NNC,N),
+                 (
+                    explored_safe(NNR, NNC); 
+                    unexplored_safe(NNR,NNC)
+                )
+            )
+        )
+    ), 
+    assert_fact(gold(R,C)), 
+    retract(unknown(R,C)); 
+true).
     
-% is_pit
+% Validates if the given tile can be inferred as a pit.
+% is_pit() 
 
 % Updates knowledge base from the move of the player and tile status.
 move(R,C,S,N) :-
@@ -73,6 +86,22 @@ move(R,C,S,N) :-
                                                                         is_unexplored_safe(NR,NC)); 
                                                                 true); 
                     true),
+    (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
+                                             assert_fact(breeze(R,C)),
+                                             assert_fact(explored_safe(R,C)), 
+                                             forall(neighbor(R,C,NR,NC,N), 
+                                                    is_unknown(NR,NC)); 
+                                             true); 
+                     true),
+    (member(glitter,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
+                                             assert_fact(glitter(R,C)), 
+                                             assert_fact(explored_safe(R,C)),
+                                             forall(neighbor(R,C,NR,NC,N), 
+                                                    is_unknown(NR,NC)),
+                                             forall(neighbor(R,C,NR,NC,N),
+                                                    is_gold(NR,NC,N)); 
+                                             true); 
+                     true),
     (member(gold,S) -> (unknown(R,C) -> retract(unknown(R,C)), 
                                         assert_fact(gold(R,C)),
                                         assert_fact(explored_safe(R,C)),
@@ -85,20 +114,6 @@ move(R,C,S,N) :-
                                                      assert_fact(coins(NX))); 
                                         true); 
                         true),
-    (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
-                                             assert_fact(breeze(R,C)),
-                                             assert_fact(explored_safe(R,C)), 
-                                             forall(neighbor(R,C,NR,NC,N), 
-                                                    is_unknown(NR,NC)); 
-                                             true); 
-                     true),
-    (member(glitter,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
-                                             assert_fact(glitter(R,C)), 
-                                             assert_fact(explored_safe(R,C)),
-                                             forall(neighbor(R,C,NR,NC,N), 
-                                                    is_unknown(NR,NC)); 
-                                             true); 
-                     true),
     (member(pit,S) -> (unknown(R,C) -> retract(unknown(R,C)), 
                                      assert_fact(pit(R,C)); 
                                      true); 
