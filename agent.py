@@ -76,6 +76,7 @@ class Agent:
                 self.map.unknown.add((dict(fact)["R"], dict(fact)["C"]))
 
             p_buffer = list(self.prolog.query(f"pit(R,C)."))
+            
             for fact in p_buffer:
                 self.map.pit.add((dict(fact)["R"], dict(fact)["C"]))
         
