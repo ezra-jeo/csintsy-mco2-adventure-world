@@ -36,7 +36,6 @@ initialize_start(R,C,N) :-
 % Infers the given tile is unexplored safe with the respect to the constraints.
 is_unexplored_safe(R,C) :-
     (\+ breeze(R,C),
-%    \+ glitter(R,C),
     \+ pit(R,C),
     \+ gold(R,C),
     \+ explored_safe(R,C),
@@ -47,7 +46,6 @@ is_unexplored_safe(R,C) :-
 % Infers the given tile is unknown with the respect to the constraints.
 is_unknown(R,C) :-
     (\+ breeze(R,C),
-%    \+ glitter(R,C),
     \+ pit(R,C),
     \+ gold(R,C),
     \+ unexplored_safe(R,C),
@@ -105,36 +103,25 @@ move(R,C,S,N) :-
                                                                 forall(neighbor(R,C,NR,NC,N), 
                                                                         is_unexplored_safe(NR,NC)); 
                                                                 true); 
-                    true),
-    (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> ((member(gold,S) -> true); retract(unexplored_safe(R,C)); retract(unknown(R,C)), assert_fact(explored_safe(R,C))),
+                    true),                   
+    (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> ((member(gold,S) -> true); (retract(unexplored_safe(R,C)); retract(unknown(R,C))), assert_fact(explored_safe(R,C))),
                                                                    assert_fact(breeze(R,C)),
                                                                    forall(neighbor(R,C,NR,NC,N), 
-                                                                          is_unknown(NR,NC)),
-                                                                   forall(neighbor(R,C,NR,NC,N),
-                                                                          is_pit(NR,NC,N)); 
+                                                                          is_unknown(NR,NC));
                                                                    true); 
                          true),
-    % (member(glitter,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
-    %                                          assert_fact(glitter(R,C)), 
-    %                                          assert_fact(explored_safe(R,C)),
-    %                                          forall(neighbor(R,C,NR,NC,N), 
-    %                                                 is_unknown(NR,NC)),
-    %                                          forall(neighbor(R,C,NR,NC,N),
-    %                                                 is_gold(NR,NC,N)); 
-    %                                          true); 
-    %                  true),
     (member(gold,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))), 
                                                                 assert_fact(gold(R,C)),
                                                                 assert_fact(explored_safe(R,C)),
-                                                                forall(neighbor(R,C,NR,NC,N), 
-                                                                       is_unexplored_safe(NR,NC)),
+                                                                (member(breeze,S) -> true; forall(neighbor(R,C,NR,NC,N), 
+                                                                                                  is_unexplored_safe(NR,NC))),
                                                                 (coins(X) -> NX is X + 1, 
                                                                              assert_fact(coins(NX)), 
                                                                              retract(coins(X)); 
                                                                              NX is 1, 
                                                                              assert_fact(coins(NX))); 
                                                 true); 
-                        true),
+                        true), 
     (member(pit,S) -> (unknown(R,C) -> retract(unknown(R,C)), 
                                        assert_fact(pit(R,C)); 
                                        true); 
