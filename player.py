@@ -48,10 +48,7 @@ class Player(): # extends Sprite
             # Snap to the grid
             self.entity.x = round(self.entity.x / GRID_SIZE) * GRID_SIZE
             self.entity.y = round(self.entity.y / GRID_SIZE) * GRID_SIZE
-            tile_x, tile_y = self.get_tile_position()
-            #map.reveal_tile(tile_x, tile_y)
 
-    
     def get_tile_position(self):
         tile_col= self.entity.x // GRID_SIZE
         tile_row = self.entity.y // GRID_SIZE 
