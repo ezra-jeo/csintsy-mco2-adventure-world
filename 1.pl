@@ -96,6 +96,18 @@ is_pit(R,C,N) :-
         retract(unknown(R,C));
     true).
 
+s_pit(R,C,N) :-
+    findall((NR,NC),
+            (neighbor(R,C,NR,NC,N),
+             unknown(NR,NC)),
+             UnexploredNeighbors),
+    length(UnexploredNeighbors,1),
+    [Pit] = UnexploredNeighbors,
+    Pit = (NR,NC),
+    assert_fact(pit(NR,NC)),
+    retract(unknown(NR,NC)),
+    !.
+
 % Updates knowledge base from the move of the player and tile status.
 move(R,C,S,N) :-
     (member(safe,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
@@ -108,7 +120,9 @@ move(R,C,S,N) :-
                                                                    assert_fact(breeze(R,C)),
                                                                    forall(neighbor(R,C,NR,NC,N), 
                                                                           is_unknown(NR,NC)),
-                                                                          is_pit(NR,NC,N);
+                                                                    s_pit(R,C,N),
+                                                                    forall(neighbor(R,C,NR,NC,N),
+                                                                           is_pit(NR,NC,N));
                                                                    true); 
                          true),
     (member(gold,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))), 
