@@ -107,7 +107,8 @@ move(R,C,S,N) :-
     (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> ((member(gold,S) -> true); (retract(unexplored_safe(R,C)); retract(unknown(R,C))), assert_fact(explored_safe(R,C))),
                                                                    assert_fact(breeze(R,C)),
                                                                    forall(neighbor(R,C,NR,NC,N), 
-                                                                          is_unknown(NR,NC));
+                                                                          is_unknown(NR,NC)),
+                                                                          is_pit(NR,NC,N);
                                                                    true); 
                          true),
     (member(gold,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))), 
