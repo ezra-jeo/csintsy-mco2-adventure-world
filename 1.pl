@@ -84,6 +84,16 @@ is_pit(R,C,N) :-
     (forall(
         neighbor(R,C,NR,NC,N),
         breeze(NR,NC)),
+        forall(
+            neighbor(NR,NC,NNR,NNC,N),
+            (
+                (NNR == R, NNC == C);
+                breeze(NNR,NNC);
+                gold(NNR,NNC);
+                explored_safe(NNR,NNC);
+                unexplored_safe(NNR,NNC)
+            )            
+        ),
         assert_fact(pit(R,C)),
         retract(unknown(R,C));
     true).
@@ -96,13 +106,12 @@ move(R,C,S,N) :-
                                                                         is_unexplored_safe(NR,NC)); 
                                                                 true); 
                     true),
-    (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
+    (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> ((member(gold,S) -> true); retract(unexplored_safe(R,C)); retract(unknown(R,C)), assert_fact(explored_safe(R,C))),
                                                                    assert_fact(breeze(R,C)),
-                                                                   assert_fact(explored_safe(R,C)), 
                                                                    forall(neighbor(R,C,NR,NC,N), 
                                                                           is_unknown(NR,NC)),
                                                                    forall(neighbor(R,C,NR,NC,N),
-                                                                          is_pit(NR,NR)); 
+                                                                          is_pit(NR,NC,N)); 
                                                                    true); 
                          true),
     % (member(glitter,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
