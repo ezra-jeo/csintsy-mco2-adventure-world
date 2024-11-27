@@ -100,7 +100,9 @@ move(R,C,S,N) :-
                                                                    assert_fact(breeze(R,C)),
                                                                    assert_fact(explored_safe(R,C)), 
                                                                    forall(neighbor(R,C,NR,NC,N), 
-                                                                          is_unknown(NR,NC)); 
+                                                                          is_unknown(NR,NC)),
+                                                                   forall(neighbor(R,C,NR,NC,N),
+                                                                          is_pit(NR,NR)); 
                                                                    true); 
                          true),
     % (member(glitter,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
