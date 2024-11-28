@@ -88,7 +88,7 @@ is_pit(R,C,N) :-
 
 is_pit_2(R,C,N) :-
     findall((NR,NC),
-            (neighbor(R,C,NR,NC,N), (unknown(NR,NC); \+pit(NR,NC))),
+            (neighbor(R,C,NR,NC,N), (unknown(NR,NC); pit(NR,NC))),
             PP),
     length(PP,1) -> ([Pit] = PP,
                      Pit = (NR,NC),
