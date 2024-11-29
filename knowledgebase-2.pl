@@ -102,14 +102,15 @@ move(R,C,S,N) :-
                                                                 assert_fact(explored_safe(R,C)),
                                                                 forall(neighbor(R,C,NR,NC,N), 
                                                                         is_unexplored_safe(NR,NC)),
-                                                                forall(neighbor(R,C,NR,NR,N), ((breeze(NR,NC) -> is_pit_2(NR,NC,N); true))); 
+                                                                forall(neighbor(R,C,NR,NC,N), ((breeze(NR,NC) -> is_pit_2(NR,NC,N); true))); 
                                                                 true);
                     true),                   
     (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> ((member(gold,S) -> true); (retract(unexplored_safe(R,C)); retract(unknown(R,C))), assert_fact(explored_safe(R,C))),
                                                                    assert_fact(breeze(R,C)),
                                                                    forall(neighbor(R,C,NR,NC,N), 
                                                                           is_unknown(NR,NC)),
-                                                                    is_pit_2(R,C,N);
+                                                                    is_pit_2(R,C,N),
+                                                                   forall(neighbor(R,C,NR,NC,N), ((breeze(NR,NC) -> is_pit_2(NR,NC,N); true))); 
                                                                    true); 
                          true),
     (member(gold,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))), 
@@ -117,7 +118,7 @@ move(R,C,S,N) :-
                                                                 assert_fact(explored_safe(R,C)),
                                                                 (member(breeze,S) -> true; forall(neighbor(R,C,NR,NC,N), 
                                                                                                   is_unexplored_safe(NR,NC))),
-                                                                forall(neighbor(R,C,NR,NR,N), ((breeze(NR,NC) -> is_pit_2(NR,NC,N); true))), 
+                                                                forall(neighbor(R,C,NR,NC,N), ((breeze(NR,NC) -> is_pit_2(NR,NC,N); true))), 
                                                                 (coins(X) -> NX is X + 1, 
                                                                              assert_fact(coins(NX)), 
                                                                              retract(coins(X)); 
