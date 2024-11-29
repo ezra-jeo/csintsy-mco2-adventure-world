@@ -99,10 +99,11 @@ is_pit_2(R,C,N) :-
 % Updates knowledge base from the move of the player and tile status.
 move(R,C,S,N) :-
     (member(safe,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> (retract(unexplored_safe(R,C)); retract(unknown(R,C))),
-                                                                assert_fact(explored_safe(R,C)), 
+                                                                assert_fact(explored_safe(R,C)),
                                                                 forall(neighbor(R,C,NR,NC,N), 
-                                                                        is_unexplored_safe(NR,NC)); 
-                                                                true); 
+                                                                        is_unexplored_safe(NR,NC)),
+                                                                forall(neighbor(R,C,NR,NR,N), ((breeze(NR,NC) -> is_pit_2(NR,NC,N); true))); 
+                                                                true);
                     true),                   
     (member(breeze,S) -> ((unexplored_safe(R,C); unknown(R,C)) -> ((member(gold,S) -> true); (retract(unexplored_safe(R,C)); retract(unknown(R,C))), assert_fact(explored_safe(R,C))),
                                                                    assert_fact(breeze(R,C)),
