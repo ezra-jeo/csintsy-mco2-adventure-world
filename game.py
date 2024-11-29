@@ -26,7 +26,7 @@ clear_color = (0,0,0)
 running = True
 
 # Constants
-R, C = 3,2 # Player start position
+R, C = 3,4 # Player start position
 N = 5 # Map size
 
 player = Entity(Player(), Sprite("images/player_facing_to_down.png"), Body(0, 0, 32, 32), x=C*64, y=R*64)
@@ -40,7 +40,7 @@ tile_kinds = [
     Tile("home", "images/home.png", False) # 5
 ]
 
-map = Map("maps/test.txt", tile_kinds, 64)
+map = Map("maps/test2.txt", tile_kinds, 64)
 agent = Agent(map, (R,C), N)
 
 positions = [None]
